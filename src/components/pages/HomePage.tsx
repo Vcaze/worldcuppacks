@@ -326,7 +326,7 @@ export default function HomePage() {
             </div>
           </motion.div>
           <p className="text-xl md:text-2xl text-foreground/80 font-medium max-w-2xl mx-auto leading-relaxed">
-            Tear open packs, discover legendary Champions League stars, and build your ultimate dream team!
+            Tear open packs, discover legendary World Cup stars, and build your ultimate dream team!
           </p>
         </motion.section>
 
