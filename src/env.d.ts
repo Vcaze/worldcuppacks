@@ -1,5 +1,3 @@
-import type { PageMetadata } from "@wix/astro-pages";
-
 /// <reference types="astro/client" />
 /// <reference path="../.astro/types.d.ts" />
 

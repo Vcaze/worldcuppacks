@@ -1,0 +1,23 @@
+When the frontend is hosted, the backend needs to be updated to allow requests from the frontend domain.
+
+Make so you can generate more packs
+Make it so the cards are tighter to each other in the packs
+Better pack animation
+Check so the rarities are correctly randomized from
+Make the pack look like a real pack
+Add so you can slice off the pack to open it
+Show big duplicate logo on top right of the card in the pack
+Add global new packs timer
+Fix so it's always 5 cards in a pack
+
+
+
+
+
+Add all players
+Add all id ranges to teamIdMap in CollectionPage.tsx
+Add images to the players
+Fix positions so there's only 4 different ones
+
+
+Make it so when you open packs when not logged in it still stores them locally during the session but the button 

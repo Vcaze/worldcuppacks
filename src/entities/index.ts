@@ -11,6 +11,8 @@ export interface PlayerCards {
   _id: string;
   _createdDate?: Date;
   _updatedDate?: Date;
+  /** Seed/player numeric ID (from seed-players) */
+  id?: number;
   /** @wixFieldType text */
   playerName?: string;
   /** @wixFieldType text */

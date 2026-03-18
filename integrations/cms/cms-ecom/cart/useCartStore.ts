@@ -1,6 +1,4 @@
 import { create } from 'zustand';
-import { currentCart } from '@wix/ecom';
-import { redirects } from '@wix/redirects';
 
 /** CMS App ID for catalog references */
 const CMS_APP_ID = 'e593b0bd-b783-45b8-97c2-873d42aacaf4';
@@ -65,44 +63,15 @@ interface CartActions {
 
 type CartStore = CartState & { actions: CartActions };
 
-/** Check if error is a Wix "not found" error */
-const isCartNotFoundError = (error: unknown): boolean => {
-  if (!error || typeof error !== 'object') return false;
-  const err = error as { details?: { applicationError?: { code?: string } }; message?: string };
-  return err.details?.applicationError?.code === 'CART_NOT_FOUND' || err.details?.applicationError?.code === 'OWNED_CART_NOT_FOUND' ||
-         err.message?.includes('not found') || false;
-};
-
-/** Convert Wix cart line item to our CartItem format */
-const mapLineItemToCartItem = (lineItem: currentCart.LineItem): CartItem | null => {
-  if (!lineItem._id || !lineItem.catalogReference) return null;
-
-  const { catalogReference, quantity, productName, price, image } = lineItem;
-  const collectionId = (catalogReference.options as { collectionId?: string } | null)?.collectionId || '';
-  const itemId = catalogReference.catalogItemId || '';
-
-  return {
-    id: lineItem._id,
-    collectionId,
-    itemId,
-    name: productName?.translated || productName?.original || 'Unknown Item',
-    price: parseFloat(price?.amount || '0') || 0,
-    quantity: quantity || 1,
-    image,
-  };
-};
-
-/** Convert Wix cart to our items format */
-const mapCartToItems = (cart: currentCart.Cart | null | undefined): CartItem[] => {
-  if (!cart?.lineItems) return [];
-  return cart.lineItems
-    .map(mapLineItemToCartItem)
-    .filter((item): item is CartItem => item !== null);
-};
-
 /**
  * Zustand store for cart state and actions.
- * No provider needed - just import and use anywhere.
+ * 
+ * NOTE: This is a client-side only implementation since Wix e-commerce has been removed.
+ * For production, implement proper cart persistence with:
+ * - LocalStorage
+ * - Your backend API
+ * - Database storage
+ * - Checkout integration with payment provider (Stripe, PayPal, etc.)
  */
 export const useCartStore = create<CartStore>((set, get) => ({
   // Initial state
@@ -116,64 +85,70 @@ export const useCartStore = create<CartStore>((set, get) => ({
   _initialized: false,
 
   actions: {
-    /** Fetch cart from server */
+    /** Fetch cart from storage/server */
     _fetchCart: async () => {
       // Only fetch once on first use
       if (get()._initialized) return;
 
       set({ isLoading: true, error: null });
       try {
-        const cart = await currentCart.getCurrentCart();
-        set({
-          items: mapCartToItems(cart),
-          isLoading: false,
-          _initialized: true,
-        });
-      } catch (error: unknown) {
-        if (isCartNotFoundError(error)) {
-          // No cart yet - that's fine
-          set({ items: [], isLoading: false, _initialized: true });
-        } else {
-          console.warn('Failed to fetch cart:', error);
+        // TODO: Replace with your backend API call to fetch cart
+        // For now, just load from localStorage as example
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('cart');
+          const items = stored ? JSON.parse(stored) : [];
           set({
+            items,
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to fetch cart',
             _initialized: true,
           });
         }
+      } catch (error: unknown) {
+        console.warn('Failed to fetch cart:', error);
+        set({
+          isLoading: false,
+          error: error instanceof Error ? error.message : 'Failed to fetch cart',
+          _initialized: true,
+        });
       }
     },
 
-    /** Add item to cart - waits for server */
+    /** Add item to cart */
     addToCart: async (input: AddToCartInput) => {
       set({ addingItemId: input.itemId, error: null });
 
       try {
-        const result = await currentCart.addToCurrentCart({
-          lineItems: [{
-            catalogReference: {
-              catalogItemId: input.itemId,
-              appId: CMS_APP_ID,
-              options: { collectionId: input.collectionId },
-            },
-            quantity: input.quantity || 1,
-          }],
-        });
+        const { items } = get();
+        const existingItem = items.find(i => i.itemId === input.itemId);
 
-        if (result?.cart) {
-          set({ items: mapCartToItems(result.cart) });
+        if (existingItem) {
+          existingItem.quantity += input.quantity || 1;
+          set({ items: [...items] });
+        } else {
+          const newItem: CartItem = {
+            id: `${input.itemId}-${Date.now()}`,
+            collectionId: input.collectionId,
+            itemId: input.itemId,
+            name: 'Product',
+            price: 0,
+            quantity: input.quantity || 1,
+          };
+          set({ items: [...items, newItem] });
+        }
+
+        // TODO: Persist to backend/localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('cart', JSON.stringify(get().items));
         }
       } catch (error: unknown) {
         console.error('Add to cart failed:', error);
         set({ error: error instanceof Error ? error.message : 'Failed to add to cart' });
-        // Try to refetch to stay in sync
-        get().actions._fetchCart();
       } finally {
         set({ addingItemId: null });
       }
     },
 
-    /** Remove item from cart - optimistic */
+    /** Remove item from cart */
     removeFromCart: (item: CartItem) => {
       const { items, _quantityTimers } = get();
 
@@ -184,34 +159,39 @@ export const useCartStore = create<CartStore>((set, get) => ({
         _quantityTimers.delete(item.id);
       }
 
-      // Optimistic update
-      set({ items: items.filter(i => i.id !== item.id) });
+      // Remove item
+      const updated = items.filter(i => i.id !== item.id);
+      set({ items: updated });
 
-      // Server call (fire and forget, rollback on error)
-      currentCart.removeLineItemsFromCurrentCart([item.id]).catch((error) => {
-        console.error('Remove from cart failed:', error);
-        // Rollback - add item back
-        set((state) => ({ items: [...state.items, item] }));
-      });
-    },
-
-    /** Internal: send quantity update to server */
-    _sendQuantityUpdate: async (lineItemId: string, quantity: number) => {
-      try {
-        if (quantity <= 0) {
-          await currentCart.removeLineItemsFromCurrentCart([lineItemId]);
-        } else {
-          await currentCart.updateCurrentCartLineItemQuantity([{ _id: lineItemId, quantity }]);
-        }
-      } catch (error) {
-        console.error('Update quantity failed:', error);
-        // Refetch to sync with server
-        set({ _initialized: false });
-        get().actions._fetchCart();
+      // Persist
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('cart', JSON.stringify(updated));
       }
     },
 
-    /** Update quantity - optimistic + debounced server call */
+    /** Internal: send quantity update to storage */
+    _sendQuantityUpdate: async (lineItemId: string, quantity: number) => {
+      try {
+        const { items } = get();
+        
+        if (quantity <= 0) {
+          set({ items: items.filter(i => i.id !== lineItemId) });
+        } else {
+          set({
+            items: items.map(i => i.id === lineItemId ? { ...i, quantity } : i),
+          });
+        }
+
+        // Persist
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('cart', JSON.stringify(get().items));
+        }
+      } catch (error) {
+        console.error('Update quantity failed:', error);
+      }
+    },
+
+    /** Update quantity - with debouncing */
     updateQuantity: (item: CartItem, quantity: number) => {
       const { items, _quantityTimers, actions } = get();
 
@@ -224,7 +204,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         });
       }
 
-      // Debounce server call
+      // Debounce persistence
       const existingTimer = _quantityTimers.get(item.id);
       if (existingTimer) {
         clearTimeout(existingTimer);
@@ -238,54 +218,34 @@ export const useCartStore = create<CartStore>((set, get) => ({
       _quantityTimers.set(item.id, timer);
     },
 
-    /** Clear all items from cart - optimistic */
+    /** Clear all items from cart */
     clearCart: () => {
-      const { items, _quantityTimers } = get();
-      const previousItems = [...items];
+      const { _quantityTimers } = get();
 
       // Clear all pending quantity updates
       _quantityTimers.forEach(timer => clearTimeout(timer));
       _quantityTimers.clear();
 
-      // Optimistic update
+      // Clear items
       set({ items: [] });
 
-      // Server call
-      currentCart.deleteCurrentCart().catch((error) => {
-        console.error('Clear cart failed:', error);
-        // Rollback
-        set({ items: previousItems });
-      });
+      // Clear storage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('cart');
+      }
     },
 
-    /** Checkout - redirect to Wix checkout */
+    /** Checkout - TODO: Implement payment processing */
     checkout: async () => {
       set({ isCheckingOut: true, error: null });
 
       try {
-        const checkoutResult = await currentCart.createCheckoutFromCurrentCart({
-          channelType: currentCart.ChannelType.WEB,
-        });
-
-        if (!checkoutResult.checkoutId) {
-          throw new Error('Failed to create checkout');
-        }
-
-        const { redirectSession } = await redirects.createRedirectSession({
-          ecomCheckout: { checkoutId: checkoutResult.checkoutId },
-          callbacks: {
-            postFlowUrl: typeof window !== 'undefined' ? window.location.href : '',
-          },
-        });
-
-        if (!redirectSession?.fullUrl) {
-          throw new Error('Failed to get checkout URL');
-        }
-
-        // Redirect
-        if (typeof window !== 'undefined') {
-          window.location.href = redirectSession.fullUrl;
-        }
+        // TODO: Implement checkout with your payment provider:
+        // - Stripe
+        // - PayPal
+        // - Square
+        // - Custom backend API
+        throw new Error('Checkout not implemented - connect your payment provider');
       } catch (error: unknown) {
         console.error('Checkout failed:', error);
         set({
@@ -293,7 +253,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
           isCheckingOut: false,
         });
       }
-      // Note: don't set isCheckingOut false on success - we're redirecting
     },
 
     /** Toggle cart drawer */

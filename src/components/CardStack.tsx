@@ -26,28 +26,36 @@ export default function CardStack({ cards, onClose }: CardStackProps) {
   };
 
   const getRarityColor = (rarity?: string) => {
+    // Subtle color tones per new rarities:
+    // Common -> gray, Uncommon -> green, Rare -> blue, Very Rare / Legendary -> red
     switch (rarity) {
+      case 'Very Rare':
       case 'Legendary':
-        return 'from-accent-purple via-primary to-accent-orange';
-      case 'Epic':
-        return 'from-accent-purple to-primary';
+        return 'from-red-200 to-red-300';
       case 'Rare':
-        return 'from-secondary to-primary';
+      case 'Epic':
+        return 'from-blue-200 to-blue-300';
+      case 'Uncommon':
+        return 'from-green-200 to-green-300';
+      case 'Common':
       default:
-        return 'from-foreground/20 to-foreground/40';
+        return 'from-gray-100 to-gray-200';
     }
   };
 
   const getRarityBadgeColor = (rarity?: string) => {
     switch (rarity) {
+      case 'Very Rare':
       case 'Legendary':
-        return 'bg-accent-purple';
-      case 'Epic':
-        return 'bg-primary';
+        return 'bg-red-200';
       case 'Rare':
-        return 'bg-secondary';
+      case 'Epic':
+        return 'bg-blue-200';
+      case 'Uncommon':
+        return 'bg-green-200';
+      case 'Common':
       default:
-        return 'bg-foreground/60';
+        return 'bg-gray-100';
     }
   };
 

@@ -1,16 +1,26 @@
 import { MemberProvider } from '@/integrations';
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router';
 import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 import HomePage from '@/components/pages/HomePage';
+import CollectionPage from '@/components/pages/CollectionPage';
+import PredictionsPage from '@/components/pages/PredictionsPage';
+import LoginPage from '@/components/pages/LoginPage';
+import RegisterPage from '@/components/pages/RegisterPage';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
-// Layout component that includes ScrollToTop
+// Layout component that includes Header, Footer, and ScrollToTop
 function Layout() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <ScrollToTop />
-      <Outlet />
-    </>
+      <Header />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
   );
 }
 
@@ -23,9 +33,22 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
-        routeMetadata: {
-          pageIdentifier: 'home',
-        },
+      },
+      {
+        path: "collection",
+        element: <CollectionPage />,
+      },
+      {
+        path: "predictions",
+        element: <PredictionsPage />,
+      },
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "register",
+        element: <RegisterPage />,
       },
       {
         path: "*",

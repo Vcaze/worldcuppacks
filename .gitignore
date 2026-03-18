@@ -15,7 +15,6 @@ out
 # generated types
 dist
 .astro/
-.wix
 
 # dependencies
 node_modules

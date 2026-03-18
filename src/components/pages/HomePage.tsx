@@ -1,12 +1,14 @@
 // HPI 1.7-G
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Sparkles, Trophy, Star, Zap, Shield } from 'lucide-react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { Clock, Sparkles, Trophy, Star, Zap, Shield, Plus, Lock } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { PlayerCards } from '@/entities';
 import { BaseCrudService } from '@/integrations';
+import { useMember } from '@/integrations/members/providers';
+import { updateUser, getUserPredictions } from '@/lib/api';
+import { seedPlayers } from '@/lib/seed-players';
+import { useNavigate } from 'react-router';
 
 const PLACEHOLDER_IMAGE = "https://static.wixstatic.com/media/5ff994_5f7c20baa11c4ab2b7faa4415cdfa077~mv2.png?originWidth=256&originHeight=384";
 
@@ -15,33 +17,27 @@ const PLACEHOLDER_IMAGE = "https://static.wixstatic.com/media/5ff994_5f7c20baa11
 const FoilPack = ({ onOpen, disabled }: { onOpen: () => void, disabled: boolean }) => {
   return (
     <motion.div
-      whileHover={!disabled ? { scale: 1.05, rotate: [-2, 2, -2, 0], y: -10 } : {}}
-      whileTap={!disabled ? { scale: 0.95 } : {}}
+      whileHover={!disabled ? { scale: 1.02 } : {}}
+      whileTap={!disabled ? { scale: 0.97 } : {}}
       onClick={!disabled ? onOpen : undefined}
-      className={`relative w-72 h-[400px] rounded-[24px] cursor-pointer transition-all duration-300 ${disabled ? 'opacity-50 grayscale cursor-not-allowed' : 'shadow-[0_20px_50px_rgba(255,107,107,0.3)] hover:shadow-[0_30px_60px_rgba(255,107,107,0.5)]'}`}
+      className={`relative w-56 h-[340px] rounded-[20px] cursor-pointer transition-all duration-300 ${disabled ? 'opacity-50 grayscale cursor-not-allowed' : 'shadow-[0_15px_40px_rgba(0,0,0,0.15)]'}`}
     >
-      {/* Pack Background with Gradient */}
-      <div className="absolute inset-0 rounded-[24px] bg-gradient-to-br from-primary via-accent-purple to-secondary overflow-hidden">
-        {/* Foil Texture Overlay */}
-        <div className="absolute inset-0 opacity-30 mix-blend-overlay bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-50" />
-        
-        {/* Pack Design Elements */}
-        <div className="absolute inset-2 border-4 border-white/20 rounded-[16px] flex flex-col items-center justify-center p-6 text-white text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-10 opacity-20"
-          >
-            <Sparkles className="w-48 h-48" />
-          </motion.div>
-          
-          <Trophy className="w-16 h-16 mb-4 text-accent-orange drop-shadow-lg" />
-          <h3 className="font-heading text-4xl font-bold leading-tight tracking-wider drop-shadow-md">
-            CHAMPIONS<br/>PACK
+      {/* Pack Background */}
+      <div className="absolute inset-0 rounded-[24px] bg-gradient-to-br from-sky-600 via-indigo-700 to-purple-700 overflow-hidden">
+        {/* Decorative Stripe (like a sealed pack) */}
+        <div className="absolute top-12 left-0 right-0 h-14 bg-white/20 backdrop-blur-sm" />
+        <div className="absolute top-14 left-0 right-0 h-6 bg-white/10" />
+
+        {/* Label & Branding */}
+        <div className="absolute inset-4 rounded-[20px] border-2 border-white/20 flex flex-col items-center justify-center text-white text-center p-6">
+          <div className="text-sm font-bold tracking-widest uppercase opacity-80">Official</div>
+          <h3 className="font-heading text-4xl font-extrabold leading-tight tracking-widest mt-2 drop-shadow-lg">
+            World Cup
           </h3>
-          <div className="mt-8 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
-            <p className="text-sm font-bold tracking-widest uppercase">5 Players Inside</p>
+          <p className="mt-1 text-sm font-semibold uppercase opacity-80 tracking-wide">Card Pack</p>
+
+          <div className="mt-6 px-5 py-2 bg-white/15 backdrop-blur-sm rounded-full border border-white/20">
+            <p className="text-sm font-bold tracking-widest uppercase">5 Cards</p>
           </div>
         </div>
       </div>
@@ -69,12 +65,11 @@ const PlayerCardVisual = ({ card }: { card: PlayerCards }) => {
     <div className={`w-[280px] h-[400px] rounded-[24px] border-4 ${styles.border} bg-white shadow-2xl overflow-hidden flex flex-col relative group`}>
       {/* Image Section */}
       <div className={`h-[55%] relative ${styles.bg} p-1`}>
-        <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8Y2lyY2xlIGN4PSI0IiBjeT0iNCIgcj0iMSIgZmlsbD0iI2ZmZiIvPgo8L3N2Zz4=')]" />
         <div className="w-full h-full rounded-t-[16px] overflow-hidden relative bg-white/10 backdrop-blur-sm">
           <Image 
             src={card.cardImage || PLACEHOLDER_IMAGE} 
             alt={card.playerName || 'Player'} 
-            className="w-full h-full object-cover object-top mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-500"
+            className="w-full h-full object-cover object-top transition-all duration-500"
           />
           {/* Overall Rating Badge */}
           <div className="absolute top-3 left-3 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-current text-foreground">
@@ -185,32 +180,82 @@ const InteractiveCardStack = ({ cards, onClose }: { cards: PlayerCards[], onClos
 // --- Main Page Component ---
 
 export default function HomePage() {
-  const [availablePacks, setAvailablePacks] = useState(5);
+  const { member, isAuthenticated, actions } = useMember();
+  const navigate = useNavigate();
+  const [availablePacks, setAvailablePacks] = useState<number>(member?.packsRemaining ?? 0);
   const [timeUntilNextPack, setTimeUntilNextPack] = useState(120);
   const [isOpening, setIsOpening] = useState(false);
   const [revealedCards, setRevealedCards] = useState<PlayerCards[]>([]);
   const [allPlayers, setAllPlayers] = useState<PlayerCards[]>([]);
+  const [playersByRarity, setPlayersByRarity] = useState<Record<string, PlayerCards[]>>({});
   const [showCards, setShowCards] = useState(false);
+  const [hasPredictions, setHasPredictions] = useState(false);
+  const [hasCompletedTenaball, setHasCompletedTenaball] = useState(false);
 
   useEffect(() => {
-    loadPlayers();
+    // Initialize players from seed data using their seed IDs
+    const playersWithIds = seedPlayers.map((player) => ({
+      ...player,
+      _id: String(player.id),
+    } as PlayerCards));
+    
+    setAllPlayers(playersWithIds);
+    
+    // Group players by rarity for efficient drawing
+    const byRarity: Record<string, PlayerCards[]> = {};
+    playersWithIds.forEach(player => {
+      const rarity = player.rarityLevel || 'Common';
+      if (!byRarity[rarity]) byRarity[rarity] = [];
+      byRarity[rarity].push(player);
+    });
+    setPlayersByRarity(byRarity);
   }, []);
 
   useEffect(() => {
+    setAvailablePacks(member?.packsRemaining ?? 0);
+  }, [member?.packsRemaining]);
+
+  useEffect(() => {
+    let mounted = true;
     const timer = setInterval(() => {
       setTimeUntilNextPack((prev) => {
         if (prev <= 1) {
-          setAvailablePacks((packs) => packs + 1);
-          return 120;
+          setAvailablePacks((packs) => {
+            const next = packs + 1;
+            if (member?._id) {
+              updateUser(member._id, { packsRemaining: next }).catch((err) => {
+                console.error('Failed to sync pack count:', err);
+              });
+            }
+            return next;
+          });
+          return 120; // reset to 2 minutes
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [member]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !member?.email) return;
+
+    getUserPredictions(member.email)
+      .then((predictions) => {
+        const existingDoc = Array.isArray(predictions) ? predictions[0] : predictions;
+        const existingPreds = existingDoc?.predictions;
+        setHasPredictions(Array.isArray(existingPreds) && existingPreds.length > 0);
+      })
+      .catch((err) => {
+        console.error('Failed to check predictions:', err);
+        setHasPredictions(false);
+      });
+  }, [isAuthenticated, member]);
 
   const loadPlayers = async () => {
+    if (!isAuthenticated) return;
+
     try {
       const { items } = await BaseCrudService.getAll<PlayerCards>('playercards');
       setAllPlayers(items);
@@ -221,56 +266,147 @@ export default function HomePage() {
 
   const getRandomCards = (count: number): PlayerCards[] => {
     const cards: PlayerCards[] = [];
-    const playersCopy = [...allPlayers];
+    const usedIds = new Set<string>();
     
-    for (let i = 0; i < count && playersCopy.length > 0; i++) {
-      const rarityWeights: Record<string, number> = {
-        'Common': 50,
-        'Rare': 30,
-        'Epic': 15,
-        'Legendary': 5
-      };
-      
-      const weightedPlayers = playersCopy.map(player => ({
-        player,
-        weight: rarityWeights[player.rarityLevel || 'Common'] || 50
-      }));
-      
-      const totalWeight = weightedPlayers.reduce((sum, wp) => sum + wp.weight, 0);
+    const rarityWeights = {
+      'Common': 50,
+      'Rare': 30,
+      'Epic': 15,
+      'Legendary': 5
+    };
+    
+    while (cards.length < count) {
+      // Step 1: Randomly select rarity based on weights
+      const totalWeight = Object.values(rarityWeights).reduce((a, b) => a + b, 0);
       let random = Math.random() * totalWeight;
+      let selectedRarity = 'Common';
       
-      let selectedPlayer = playersCopy[0];
-      for (const wp of weightedPlayers) {
-        random -= wp.weight;
+      for (const [rarity, weight] of Object.entries(rarityWeights)) {
+        random -= weight;
         if (random <= 0) {
-          selectedPlayer = wp.player;
+          selectedRarity = rarity;
           break;
         }
       }
       
-      cards.push(selectedPlayer);
-      const index = playersCopy.indexOf(selectedPlayer);
-      if (index > -1) {
-        playersCopy.splice(index, 1);
+      // Step 2: Pick a random player from that rarity (avoiding duplicates in this pack)
+      const playersOfRarity = playersByRarity[selectedRarity] || [];
+      const availablePlayers = playersOfRarity.filter(p => !usedIds.has(p._id));
+      
+      if (availablePlayers.length > 0) {
+        const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+        cards.push(randomPlayer);
+        usedIds.add(randomPlayer._id);
+      } else {
+        // If no unique players left for this rarity, allow duplicates
+        const allPlayersOfRarity = playersByRarity[selectedRarity] || [];
+        if (allPlayersOfRarity.length > 0) {
+          const randomPlayer = allPlayersOfRarity[Math.floor(Math.random() * allPlayersOfRarity.length)];
+          cards.push(randomPlayer);
+          usedIds.add(randomPlayer._id);
+        }
       }
     }
     
     return cards;
   };
 
+  const updateUserPackState = useCallback(
+    async (newPackCount: number, newCards: PlayerCards[] = []) => {
+      if (!member?._id) return;
+      try {
+        const existing = member.collectedCardIds ?? [];
+        const existingIds = new Set(existing as number[]);
+        
+        // Only add card IDs that aren't already in the collection
+        const newCardIds = newCards
+          .map(card => card.id)
+          .filter((id): id is number => id !== undefined && !existingIds.has(id));
+        
+        const updatedCollectedIds = [...existing, ...newCardIds];
+
+        await updateUser(member._id, {
+          packsRemaining: newPackCount,
+          collectedCardIds: updatedCollectedIds,
+        });
+
+        // Reload member state (including latest pack count)
+        actions.loadCurrentMember();
+      } catch (err) {
+        console.error('Failed to update user pack state:', err);
+      }
+    },
+    [member, actions]
+  );
+  
+  // Helper to convert card IDs back to full player data
+  const getPlayersByIds = useCallback((cardIds: string[]): PlayerCards[] => {
+    return cardIds
+      .map(id => allPlayers.find(p => p._id === id))
+      .filter((p): p is PlayerCards => p !== undefined);
+  }, [allPlayers]);
+
   const handleOpenPack = () => {
-    if (availablePacks > 0 && !isOpening && allPlayers.length > 0) {
+    if (!isAuthenticated) {
+      actions.login();
+      return;
+    }
+
+    if (availablePacks > 0 && !isOpening) {
       setIsOpening(true);
       setAvailablePacks((prev) => prev - 1);
-      
+
       // Simulate opening animation delay
-      setTimeout(() => {
+      setTimeout(async () => {
         const cards = getRandomCards(5);
         setRevealedCards(cards);
         setIsOpening(false);
         setShowCards(true);
+
+        // Persist pack decrement + save collected card IDs
+        const nextPacks = Math.max(0, (member?.packsRemaining ?? 0) - 1);
+        await updateUserPackState(nextPacks, cards);
       }, 1500);
     }
+  };
+
+  const handleAddPack = () => {
+    if (!isAuthenticated) {
+      actions.login();
+      return;
+    }
+
+    if (member?._id) {
+      const newPackCount = (member?.packsRemaining ?? 0) + 1;
+      updateUser(member._id, { packsRemaining: newPackCount })
+        .then(() => {
+          setAvailablePacks(newPackCount);
+          actions.loadCurrentMember();
+        })
+        .catch((err) => {
+          console.error('Failed to add pack:', err);
+        });
+    }
+  };
+
+  const handleWorldCupPredictions = () => {
+    if (!isAuthenticated) {
+      actions.login();
+      return;
+    }
+
+    // Navigate to predictions page (packs are awarded when saving predictions)
+    navigate('/predictions');
+  };
+
+  const handleDailyTenaball = () => {
+    if (!isAuthenticated) {
+      actions.login();
+      return;
+    }
+
+    // Navigate to Tenaball game (not implemented yet)
+    navigate('/tenaball');
   };
 
   const handleCloseCards = () => {
@@ -286,87 +422,71 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background font-paragraph overflow-clip relative selection:bg-primary selection:text-white">
-      <style>{`
-        .bg-pattern {
-          background-image: radial-gradient(#4ECDC4 2px, transparent 2px);
-          background-size: 40px 40px;
-          opacity: 0.1;
-        }
-        .perspective-1000 {
-          perspective: 1000px;
-        }
-      `}</style>
-      
-      {/* Animated Background Pattern */}
-      <div className="fixed inset-0 pointer-events-none bg-pattern z-0" />
-      
-      <Header />
-      
-      <main className="relative z-10 w-full max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20 flex flex-col items-center">
+      <main className="relative z-10 w-full max-w-[120rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col items-center">
         
         {/* Hero Section */}
         <motion.section 
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center mb-16 w-full max-w-4xl"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-center mb-4 w-full max-w-3xl"
         >
           <motion.div
             initial={{ scale: 0.8, rotate: -5 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ duration: 0.6, type: 'spring', bounce: 0.5 }}
-            className="inline-block mb-6"
+            transition={{ duration: 0.5, type: 'spring', bounce: 0.5 }}
+            className="inline-block mb-2"
           >
-            <div className="bg-white px-8 py-4 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.08)] border-4 border-primary/10 inline-flex items-center gap-4">
-              <Sparkles className="w-8 h-8 text-accent-orange animate-pulse" />
-              <h1 className="text-5xl md:text-7xl font-heading text-primary font-bold tracking-tight">
-                Pack Opener
+            <div className="bg-white px-5 py-2 rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.06)] border-2 border-primary/10 inline-flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-accent-orange animate-pulse" />
+              <h1 className="text-3xl md:text-4xl font-heading text-primary font-bold tracking-tight">
+                World Cup Packs
               </h1>
-              <Sparkles className="w-8 h-8 text-accent-orange animate-pulse" />
+              <Sparkles className="w-5 h-5 text-accent-orange animate-pulse" />
             </div>
           </motion.div>
-          <p className="text-xl md:text-2xl text-foreground/80 font-medium max-w-2xl mx-auto leading-relaxed">
-            Tear open packs, discover legendary World Cup stars, and build your ultimate dream team!
+          <p className="text-base md:text-lg text-foreground/80 font-medium max-w-2xl mx-auto leading-relaxed">
+            Open packs and discover all the stars!
           </p>
         </motion.section>
 
         {/* Dashboard / Timer Section */}
         <motion.section 
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="w-full max-w-3xl mb-16 sticky top-24 z-30"
+          transition={{ delay: 0.15, duration: 0.4 }}
+          className="w-full max-w-3xl mb-6"
         >
-          <div className="bg-white/80 backdrop-blur-xl rounded-[32px] shadow-[0_20px_40px_rgba(0,0,0,0.05)] border-2 border-white p-6 md:p-8 flex flex-col md:flex-row items-center justify-around gap-8">
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.04)] border border-white p-4 md:p-5 flex flex-col md:flex-row items-center justify-around gap-3">
             
             {/* Packs Available */}
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Trophy className="w-6 h-6 text-primary" />
+            <div className="flex flex-col items-center text-center">
+              <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center mb-1">
+                <Trophy className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-sm font-bold text-foreground/50 uppercase tracking-widest mb-1">Available Packs</p>
+              <p className="text-xs font-bold text-foreground/50 uppercase tracking-wide">Packs</p>
               <motion.div 
                 key={availablePacks}
-                initial={{ scale: 1.5, color: '#FFC857' }}
-                animate={{ scale: 1, color: '#FF6B6B' }}
-                className="text-6xl font-heading font-bold text-primary"
+                initial={{ scale: 1.5 }}
+                animate={{ scale: 1 }}
+                className="text-3xl font-heading font-bold text-primary"
               >
                 {availablePacks}
               </motion.div>
             </div>
             
             {/* Divider */}
-            <div className="w-full md:w-px h-px md:h-24 bg-gradient-to-b from-transparent via-foreground/10 to-transparent" />
+            <div className="w-full md:w-px h-px md:h-14 bg-gradient-to-b from-transparent via-foreground/10 to-transparent" />
             
             {/* Timer */}
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Clock className="w-6 h-6 text-secondary" />
+            <div className="flex flex-col items-center text-center">
+              <div className="w-9 h-9 bg-secondary/10 rounded-full flex items-center justify-center mb-1">
+                <Clock className="w-5 h-5 text-secondary" />
               </div>
-              <p className="text-sm font-bold text-foreground/50 uppercase tracking-widest mb-1">Next Free Pack</p>
+              <p className="text-xs font-bold text-foreground/50 uppercase tracking-wide">Next Pack</p>
               <motion.div 
                 key={timeUntilNextPack}
-                className="text-6xl font-heading font-bold text-secondary tabular-nums"
+                className="text-3xl font-heading font-bold text-secondary tabular-nums"
               >
                 {formatTime(timeUntilNextPack)}
               </motion.div>
@@ -376,50 +496,148 @@ export default function HomePage() {
         </motion.section>
 
         {/* The Stage (Pack Opening Area) */}
-        <section className="w-full min-h-[600px] flex items-center justify-center relative z-20 mb-24">
+        <section className="w-full min-h-[400px] flex items-center justify-between relative z-20 mb-6 px-8">
           {/* Decorative Stage Background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent rounded-[64px] -z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent rounded-[40px] -z-10" />
           
           <AnimatePresence mode="wait">
             {!showCards ? (
-              <motion.div
-                key="pack-container"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ 
-                  opacity: 1, 
-                  scale: 1,
-                  ...(isOpening ? {
-                    scale: [1, 1.1, 1.1, 0],
-                    rotate: [0, -5, 5, -5, 5, 0],
-                    filter: ["brightness(1)", "brightness(1.5)", "brightness(2)", "brightness(0)"]
-                  } : {})
-                }}
-                exit={{ opacity: 0, scale: 0 }}
-                transition={{ duration: isOpening ? 1.5 : 0.5 }}
-                className="relative"
-              >
-                {isOpening && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 2 }}
-                    className="absolute inset-0 bg-white rounded-full blur-3xl z-[-1]"
+              <>
+                {/* Left side - Add Pack Button */}
+                <motion.button
+                  onClick={handleAddPack}
+                  disabled={!isAuthenticated || isOpening}
+                  whileHover={!isAuthenticated || isOpening ? {} : { scale: 1.05 }}
+                  whileTap={!isAuthenticated || isOpening ? {} : { scale: 0.95 }}
+                  className={`relative w-20 h-32 rounded-[16px] transition-all duration-300 ${
+                    !isAuthenticated || isOpening 
+                      ? 'opacity-50 grayscale cursor-not-allowed' 
+                      : 'shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.15)]'
+                  } bg-gradient-to-br from-green-500 via-emerald-600 to-green-700 text-white font-bold text-sm`}
+                >
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <Plus className="w-6 h-6 mb-2" />
+                    <span>Add Pack</span>
+                  </div>
+                  {!isAuthenticated && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-[16px]">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                  )}
+                </motion.button>
+
+                {/* Center - Main Pack */}
+                <motion.div
+                  key="pack-container"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    ...(isOpening ? {
+                      scale: [1, 1.1, 1.1, 0],
+                      filter: ["brightness(1)", "brightness(1.5)", "brightness(2)", "brightness(0)"]
+                    } : {})
+                  }}
+                  exit={{ opacity: 0, scale: 0 }}
+                  transition={{ duration: isOpening ? 1.5 : 0.5 }}
+                  className="relative"
+                >
+                  {isOpening && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 2 }}
+                      className="absolute inset-0 bg-white rounded-full blur-3xl z-[-1]"
+                    />
+                  )}
+                  <FoilPack 
+                    onOpen={handleOpenPack} 
+                    disabled={!isAuthenticated || availablePacks === 0 || allPlayers.length === 0 || isOpening} 
                   />
-                )}
-                <FoilPack 
-                  onOpen={handleOpenPack} 
-                  disabled={availablePacks === 0 || allPlayers.length === 0 || isOpening} 
-                />
-                
-                {availablePacks === 0 && !isOpening && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute -bottom-16 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white px-6 py-3 rounded-full shadow-md text-foreground font-bold"
+
+                  {!isAuthenticated && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute -bottom-16 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white px-6 py-3 rounded-full shadow-md text-foreground font-bold"
+                    >
+                      Log in to open packs
+                    </motion.div>
+                  )}
+
+                  {isAuthenticated && availablePacks === 0 && !isOpening && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute -bottom-16 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white px-6 py-3 rounded-full shadow-md text-foreground font-bold"
+                    >
+                      Waiting for next pack...
+                    </motion.div>
+                  )}
+                </motion.div>
+
+                {/* Right side - Pack Options */}
+                <div className="flex flex-col gap-3">
+                  <motion.button
+                    onClick={handleWorldCupPredictions}
+                    disabled={!isAuthenticated || isOpening || hasPredictions}
+                    whileHover={!isAuthenticated || isOpening || hasPredictions ? {} : { scale: 1.05 }}
+                    whileTap={!isAuthenticated || isOpening || hasPredictions ? {} : { scale: 0.95 }}
+                    className={`relative w-32 h-20 rounded-[16px] transition-all duration-300 ${
+                      !isAuthenticated || isOpening || hasPredictions
+                        ? 'opacity-50 grayscale cursor-not-allowed' 
+                        : 'shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.15)]'
+                    } bg-gradient-to-br ${hasPredictions ? 'from-gray-400 via-gray-500 to-gray-600' : 'from-blue-500 via-indigo-600 to-blue-700'} text-white font-bold text-sm`}
                   >
-                    Waiting for next pack...
-                  </motion.div>
-                )}
-              </motion.div>
+                    <div className="flex flex-col items-center justify-center h-full px-2">
+                      <Trophy className="w-5 h-5 mb-1" />
+                      <span className="text-xs font-semibold">
+                        World Cup Predictions
+                      </span>
+                      {hasPredictions && (
+                        <span className="text-xs italic font-serif">
+                          Completed
+                        </span>
+                      )}
+                      <span className="text-lg font-bold">
+                        {hasPredictions ? '✓' : '+5 packs'}
+                      </span>
+                    </div>
+                    {!isAuthenticated && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-[16px]">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                    )}
+                  </motion.button>
+
+                  <motion.button
+                    onClick={handleDailyTenaball}
+                    disabled={!isAuthenticated || isOpening || hasCompletedTenaball}
+                    whileHover={!isAuthenticated || isOpening || hasCompletedTenaball ? {} : { scale: 1.05 }}
+                    whileTap={!isAuthenticated || isOpening || hasCompletedTenaball ? {} : { scale: 0.95 }}
+                    className={`relative w-32 h-20 rounded-[16px] transition-all duration-300 ${
+                      !isAuthenticated || isOpening || hasCompletedTenaball
+                        ? 'opacity-50 grayscale cursor-not-allowed' 
+                        : 'shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.15)]'
+                    } bg-gradient-to-br ${hasCompletedTenaball ? 'from-gray-400 via-gray-500 to-gray-600' : 'from-purple-500 via-violet-600 to-purple-700'} text-white font-bold text-sm`}
+                  >
+                    <div className="flex flex-col items-center justify-center h-full px-2">
+                      <Zap className="w-5 h-5 mb-1" />
+                      <span className="text-xs font-semibold">
+                        {hasCompletedTenaball ? 'Daily Tenaball' : 'Play daily'}
+                      </span>
+                      <span className="text-xs">Tenaball</span>
+                      <span className="text-lg font-bold">
+                        {hasCompletedTenaball ? '✓' : '+1 pack'}
+                      </span>
+                    </div>
+                    {!isAuthenticated && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-[16px]">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                    )}
+                  </motion.button>
+                </div>
+              </>
             ) : (
               <motion.div
                 key="cards-container"
@@ -436,34 +654,31 @@ export default function HomePage() {
 
         {/* Rules / Info Section */}
         <motion.section 
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8"
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-3"
         >
           {[
-            { icon: <Sparkles className="w-8 h-8 text-primary" />, title: "Tear It Open", desc: "Click a pack to reveal 5 random players. Watch out for the shiny ones!", color: "bg-primary/10" },
-            { icon: <Clock className="w-8 h-8 text-secondary" />, title: "Always Free", desc: "A fresh pack drops every 2 minutes. The fun never stops!", color: "bg-secondary/10" },
-            { icon: <Star className="w-8 h-8 text-accent-orange" />, title: "Find Legends", desc: "Collect Common, Rare, Epic, and Legendary stars from top teams.", color: "bg-accent-orange/10" }
+            { icon: <Sparkles className="w-5 h-5 text-primary" />, title: "Tear It Open", desc: "Reveal 5 random players!", color: "bg-primary/10" },
+            { icon: <Clock className="w-5 h-5 text-secondary" />, title: "Always Free", desc: "New pack every 2 minutes!", color: "bg-secondary/10" },
+            { icon: <Star className="w-5 h-5 text-accent-orange" />, title: "Find Legends", desc: "Collect all rarities!", color: "bg-accent-orange/10" }
           ].map((item, i) => (
             <motion.div 
               key={i}
-              whileHover={{ y: -10 }}
-              className="bg-white rounded-[32px] p-8 shadow-[0_10px_30px_rgba(0,0,0,0.05)] border-2 border-transparent hover:border-primary/10 transition-colors text-center flex flex-col items-center"
+              className="bg-white rounded-xl p-4 shadow-[0_5px_12px_rgba(0,0,0,0.04)] border border-transparent transition-colors text-center flex flex-col items-center"
             >
-              <div className={`w-20 h-20 ${item.color} rounded-[24px] flex items-center justify-center mb-6 rotate-3`}>
+              <div className={`w-12 h-12 ${item.color} rounded-lg flex items-center justify-center mb-2`}>
                 {item.icon}
               </div>
-              <h3 className="text-2xl font-heading font-bold text-foreground mb-4">{item.title}</h3>
-              <p className="text-foreground/70 leading-relaxed">{item.desc}</p>
+              <h3 className="text-base font-heading font-bold text-foreground mb-1">{item.title}</h3>
+              <p className="text-xs text-foreground/70">{item.desc}</p>
             </motion.div>
           ))}
         </motion.section>
 
       </main>
-
-      <Footer />
     </div>
   );
 }
