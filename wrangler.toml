@@ -2,3 +2,4 @@ name = "worldcuppacks"           # your project name
 type = "javascript"              # or "esm" if using ES modules
 account_id = "96193bf4848bc0a24cb5df6dc4073ba1"   # find in Cloudflare dashboard → Workers → Overview
 workers_dev = true
+pages_build_output_dir = "dist"
