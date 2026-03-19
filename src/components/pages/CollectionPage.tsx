@@ -132,11 +132,11 @@ export default function CollectionPage() {
     const teamCards = getTeamCards(selectedTeam.name);
     
     return (
-      <div className="min-h-[70vh] py-12 px-4">
+      <div className="min-h-[70vh] py-12 px-4" style={{backgroundColor: '#333333'}}>
         <div className="max-w-[120rem] mx-auto">
           <button
             onClick={handleBack}
-            className="mb-6 flex items-center gap-2 text-primary hover:underline"
+            className="mb-6 flex items-center gap-2 text-white hover:text-[#e0e0e0] text-hover"
           >
             ← Back to Collection
           </button>
@@ -145,26 +145,26 @@ export default function CollectionPage() {
             {selectedTeam.flagUrl && (
               <img className="h-8 w-10 rounded-sm object-cover" src={selectedTeam.flagUrl} alt="flag" />
             )}
-            <h1 className="text-4xl font-heading font-bold text-primary">{selectedTeam.name}</h1>
+            <h1 className="text-4xl font-heading font-bold text-white">{selectedTeam.name}</h1>
           </div>
 
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-4">
             {teamCards.map((teamCard) => (
               <div key={teamCard.id} className="relative">
                 {teamCard.isOwned && teamCard.card ? (
-                  <div className="w-full h-40 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="h-24 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <div className="w-full h-40 card rounded-lg border shadow-sm overflow-hidden">
+                    <div className="h-24 bg-blue-500 flex items-center justify-center">
                       <div className="text-white text-center">
                         <div className="text-lg font-bold px-2">{teamCard.card.playerName}</div>
                       </div>
                     </div>
-                    <div className="p-2">
-                      <div className="text-xs text-gray-600 truncate">{teamCard.card.playerPosition}</div>
+                    <div className="p-2 bg-white/10">
+                      <div className="text-xs text-white truncate">{teamCard.card.playerPosition}</div>
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-40 bg-gray-100 rounded-lg border border-gray-300 shadow-sm flex items-center justify-center">
-                    <div className="text-4xl text-gray-400 font-bold">?</div>
+                  <div className="w-full h-40 card rounded-lg border shadow-sm flex items-center justify-center">
+                    <div className="text-4xl text-white font-bold">?</div>
                   </div>
                 )}
                 <div className="absolute top-1 left-1 bg-black/50 text-white text-xs px-1 rounded">
@@ -180,21 +180,21 @@ export default function CollectionPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
+      <div className="min-h-[70vh] flex items-center justify-center px-4" style={{backgroundColor: '#333333'}}>
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-foreground mb-2">Not logged in</h2>
-          <p className="text-foreground/70">Log in to see your collection.</p>
+          <h2 className="text-2xl font-semibold text-white mb-2">Not logged in</h2>
+          <p className="text-white/70">Log in to see your collection.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[70vh] py-12 px-4">
+    <div className="min-h-[70vh] py-12 px-4" style={{backgroundColor: '#333333'}}>
       <div className="max-w-[120rem] mx-auto">
-        <h1 className="text-4xl font-heading font-bold text-primary mb-8">Your Collection</h1>
+        <h1 className="text-4xl font-heading font-bold text-white mb-8">Your Collection</h1>
 
-        <p className="text-foreground/70 mb-6">Teams are shown as decks. Each deck displays a small stacked preview of cards you own for that country and a count of how many out of 20 cards you have (e.g. 7/20).</p>
+        <p className="text-white/70 mb-6">Teams are shown as decks. Each deck displays a small stacked preview of cards you own for that country and a count of how many out of 20 cards you have (e.g. 7/20).</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 justify-items-center">
           {sortedTeams.map((team) => {
@@ -209,7 +209,7 @@ export default function CollectionPage() {
               return (
                 <div
                   key={i}
-                  className={`absolute w-32 h-40 rounded-md overflow-hidden bg-slate-100 border border-white/20 shadow-sm`}
+                  className={`absolute w-32 h-40 rounded-md overflow-hidden card border shadow-sm`}
                   style={{ left: '50%', transform: 'translateX(-50%)', opacity }}
                 >
                 </div>
@@ -225,11 +225,11 @@ export default function CollectionPage() {
                 <div className="relative w-36 h-44">
                   {thumbs}
                   <div className="absolute top-0 left-0 right-0 flex flex-col items-center p-2">
-                    <p className="font-semibold text-foreground text-xs mb-1">{team.name}</p>
+                    <p className="font-semibold text-white text-xs mb-1">{team.name}</p>
                     {team.flagUrl && (
                       <img className="h-5 w-7 rounded-sm object-cover mb-1" src={team.flagUrl} alt="flag" />
                     )}
-                    <p className="text-xs text-foreground/70">{have}/{total}</p>
+                    <p className="text-xs text-white/70">{have}/{total}</p>
                   </div>
                 </div>
               </div>

@@ -27,12 +27,12 @@ export default {
                 'accent-purple': '#606060',
                 destructive: '#E74C3C',
                 'destructive-foreground': '#FFFFFF',
-                background: '#E8E8E8',
-                secondary: '#A0A0A0',
-                foreground: '#1A1A1A',
+                background: '#333333',
+                secondary: '#FFFFFF',
+                foreground: '#FFFFFF',
                 'secondary-foreground': '#FFFFFF',
                 'primary-foreground': '#FFFFFF',
-                primary: '#2D2D2D'
+                primary: '#FFFFFF'
             },
         },
     },

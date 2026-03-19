@@ -15,8 +15,8 @@ export default function Header() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'text-lg font-paragraph transition-colors duration-200',
-      isActive ? 'text-primary underline' : 'text-foreground hover:text-primary'
+      'text-lg font-paragraph transition-colors duration-200 text-hover',
+      isActive ? 'text-white underline' : 'text-white'
     );
 
   return (
@@ -24,7 +24,7 @@ export default function Header() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', bounce: 0.3 }}
-      className="bg-white shadow-md sticky top-0 z-50"
+      className="header-footer shadow-md sticky top-0 z-50"
     >
       <div className="max-w-[120rem] mx-auto px-6 py-6">
         <div className="relative flex items-center justify-between">
@@ -34,10 +34,10 @@ export default function Header() {
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
             >
-              <Sparkles className="w-10 h-10 text-primary" />
+              <Sparkles className="w-10 h-10 text-white" />
             </motion.div>
 
-            <NavLink to="/" className="text-xl md:text-2xl font-heading text-primary font-bold">
+            <NavLink to="/" className="text-xl md:text-2xl font-heading text-white font-bold text-hover">
               World Cup Packs
             </NavLink>
           </div>
@@ -53,21 +53,24 @@ export default function Header() {
             <NavLink to="/predictions" className={linkClass}>
               Predictions
             </NavLink>
+            <NavLink to="/tenaball" className={linkClass}>
+              Tenaball
+            </NavLink>
           </nav>
 
           {/* Right: auth (visible on all sizes) */}
           <div className="flex items-center gap-4">
             {isLoading ? (
-              <span className="text-foreground/60">Loading...</span>
+              <span className="text-white">Loading...</span>
             ) : isAuthenticated ? (
               <div className="flex items-center gap-4">
-                <span className="text-sm text-foreground/70">{member?.email}</span>
-                <button className="text-sm text-primary hover:underline" onClick={handleLogout}>
+                <span className="text-sm text-white">{member?.email}</span>
+                <button className="text-sm text-white hover:text-[#d1d5db] transition-colors" onClick={handleLogout}>
                   Logout
                 </button>
               </div>
             ) : (
-              <button className="text-sm text-primary hover:underline" onClick={() => navigate('/login')}>
+              <button className="text-sm text-white hover:text-[#d1d5db] transition-colors" onClick={() => navigate('/login')}>
                 Login
               </button>
             )}

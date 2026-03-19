@@ -41,9 +41,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-3xl bg-white/70 backdrop-blur-xl border border-white/20 p-10 shadow-xl">
-        <h1 className="text-3xl font-heading font-bold text-foreground mb-6 text-center">Login</h1>
+    <div className="min-h-[70vh] flex items-center justify-center px-4" style={{backgroundColor: '#333333'}}>
+      <div className="w-full max-w-md rounded-3xl card backdrop-blur-xl border p-10 shadow-xl">
+        <h1 className="text-3xl font-heading font-bold text-white mb-6 text-center">Login</h1>
 
         {error && (
           <div className="mb-4 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -53,7 +53,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-sm font-medium text-foreground/70">Email</span>
+            <span className="text-sm font-medium text-white/70">Email</span>
             <Input
               value={email}
               type="email"
@@ -64,7 +64,7 @@ export default function LoginPage() {
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-foreground/70">Password</span>
+            <span className="text-sm font-medium text-white/70">Password</span>
             <Input
               value={password}
               type="password"
@@ -79,9 +79,9 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-sm text-foreground/70 text-center">
+        <p className="mt-6 text-sm text-white/70 text-center">
           Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-primary hover:underline">
+          <Link to="/register" className="text-white hover:text-[#e0e0e0] text-hover">
             Register
           </Link>
         </p>

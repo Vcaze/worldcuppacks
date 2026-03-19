@@ -3,3 +3,77 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom color palette */
+@layer base {
+  :root {
+    /* Background colors */
+    --bg-primary: #333333; /* Main background - lighter gray */
+    --bg-secondary: #242424; /* Standard black for headers/boxes */
+    --bg-accent: #1d1d1d; /* Darkest accent */
+    
+    /* Text colors */
+    --text-primary: #ffffff; /* White text */
+    --text-secondary: #e0e0e0; /* Slightly darker white for hover */
+    --text-muted: #b0b0b0; /* Muted white */
+    
+    /* Button colors */
+    --btn-primary: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%); /* Purple gradient */
+    --btn-hover: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%); /* Darker purple */
+    
+    /* Pack colors */
+    --pack-bg: linear-gradient(135deg, #8b7355 0%, #a0826d 50%, #b8956a 100%); /* Brown paper gradient */
+    --pack-border: #6b5d4f;
+    --pack-shadow: rgba(139, 115, 85, 0.3);
+    
+    /* Border colors */
+    --border-primary: #404040;
+    --border-secondary: #4a4a4a;
+  }
+}
+
+/* Base styles */
+@layer components {
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+  
+  /* Button styles */
+  .btn-primary {
+    background: var(--btn-primary);
+    color: white;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    background: var(--btn-hover);
+    transform: translateY(-1px);
+  }
+  
+  /* Card/Box styles */
+  .card {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 0.5rem;
+  }
+  
+  /* Header/Footer styles */
+  .header-footer {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+  }
+  
+  /* Text hover effects */
+  .text-hover:hover {
+    color: var(--text-secondary);
+  }
+  
+  /* Pack styles */
+  .pack-card {
+    background: var(--pack-bg);
+    border: 2px solid var(--pack-border);
+    box-shadow: 0 4px 6px var(--pack-shadow);
+    border-radius: 0.75rem;
+  }
+}

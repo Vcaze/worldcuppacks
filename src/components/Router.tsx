@@ -5,6 +5,7 @@ import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 import HomePage from '@/components/pages/HomePage';
 import CollectionPage from '@/components/pages/CollectionPage';
 import PredictionsPage from '@/components/pages/PredictionsPage';
+import TenaballPage from '@/components/pages/TanaballPage';
 import LoginPage from '@/components/pages/LoginPage';
 import RegisterPage from '@/components/pages/RegisterPage';
 import Header from '@/components/Header';
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: "predictions",
         element: <PredictionsPage />,
+      },
+      {
+        path: "tenaball",
+        element: <TenaballPage />,
       },
       {
         path: "login",
