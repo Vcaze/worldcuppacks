@@ -7,10 +7,13 @@ import customErrorOverlayPlugin from "./vite-error-overlay-plugin.js";
 
 const isFastDev = process.env.FAST_DEV === "1";
 
-// https://astro.build/config
 export default defineConfig({
-  output: "server",
+  // 🔹 Change this from "server" to "static"
+  output: "static",
+  
+  // Adapter for Cloudflare Pages static site
   adapter: cloudflare(),
+  
   integrations: [
     {
       name: "framewire",
@@ -20,7 +23,7 @@ export default defineConfig({
             injectScript(
               "page",
               `import loadFramewire from "framewire.js";
-              loadFramewire(true);`
+               loadFramewire(true);`
             );
           }
         },
@@ -29,6 +32,7 @@ export default defineConfig({
     tailwind(),
     react(),
   ],
+  
   vite: {
     plugins: isFastDev ? [] : [customErrorOverlayPlugin()],
     cacheDir: 'node_modules/.cache/.vite',
@@ -46,17 +50,15 @@ export default defineConfig({
       ],
     },
   },
-  devToolbar: {
-    enabled: false,
-  },
-  image: {
-    domains: [],
-  },
+  
+  devToolbar: { enabled: false },
+  
+  image: { domains: [] },
+  
   server: {
     allowedHosts: true,
     host: true,
   },
-  security: {
-    checkOrigin: false
-  }
+  
+  security: { checkOrigin: false },
 });
