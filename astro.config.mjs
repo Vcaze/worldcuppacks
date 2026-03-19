@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import tailwind from "@astrojs/tailwind";
-import cloudflare from "@astrojs/cloudflare";
 import react from "@astrojs/react";
 import customErrorOverlayPlugin from "./vite-error-overlay-plugin.js";
 
@@ -11,8 +10,9 @@ export default defineConfig({
   // 🔹 Change this from "server" to "static"
   output: "static",
   
-  // Adapter for Cloudflare Pages static site
-  adapter: cloudflare(),
+
+  // Adapter removed to output a completely static site
+
   
   integrations: [
     {

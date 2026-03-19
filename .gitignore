@@ -44,3 +44,6 @@ docs/*
 # Other
 .vscode/
 backend/
+
+# Environment files (keep fakeenv.js local)
+public/fakeenv.js
